@@ -38,18 +38,24 @@ business_holidays_2022_datetime = [datetime.strptime(date, '%Y-%m-%d') for date 
 
 # weekday() indexes: Monday = 0, Tuesday = 1, Wednesday = 2, Thursday = 3, Friday = 4, Saturday = 5, Sunday = 6
 def calculate_new_date(old_date):
-    """Calculates the new date using the old date as an input
-    (new date is expected to be three business days after old date, so holidays and weekends must be skipped)"""
-    if old_date.weekday() == 4:  # ensures if old date falls on a Friday, new date is the following Wednesday
-        new_date = old_date + timedelta(days=5)
-    else:
-        new_date = old_date + timedelta(days=3)  # adds the standard 3 days to the old date to get the new date
-    while new_date in business_holidays_2022_datetime:  # adds 1 day to the new date while new date falls on holiday
-        new_date += timedelta(days=1)
-    if new_date.weekday() == 5:  # moves new date from Saturday to the following Monday
-        new_date += timedelta(days=2)
-    elif new_date.weekday() == 6:  # moves new date from Sunday to the following Tuesday
-        new_date += timedelta(days=2)
+    """Calculates the new date using the old date as an input. New date is expected to be three business days after 
+    old date."""
+    new_date = old_date  # dates start out as matching
+    biz_days_elapsed = 0  # number of business days that have elapsed since old date
+    while biz_days_elapsed != 3:  # for every business day that passes, biz_days_elapsed will increase until it is 3
+        if new_date.weekday() >= 5 or new_date in business_holidays_2022_datetime:  # new date is not a business day
+            new_date += timedelta(days=1)
+        else:  # new date is a business day
+            if biz_days_elapsed == 2 and new_date.weekday() == 4:  # ensures Wed old date has new date on Mon
+                new_date += timedelta(days=3)
+            else:
+                new_date += timedelta(days=1)
+            biz_days_elapsed += 1
+    while new_date in business_holidays_2022_datetime:  # catches cases when old date + 3 business days is a holiday
+        if new_date.weekday() == 4:  # moves Fri new date to the following Mon
+            new_date += timedelta(days=3)
+        else:  # moves new date to following business day
+            new_date += timedelta(days=1)
     return new_date
 
 
@@ -61,13 +67,13 @@ data['NEW_DATE'] = new_dates_series
 # print(data)
 
 # save dataframe as csv
-# data.to_csv("dates_and_new_dates.csv")
+# data.to_csv("dates_and_new_dates.csv", index=False)
 
 """ This is how the dates_and_new_dates.csv looks:
-,ID,DATE,NEW_DATE
-0,01,2022-01-04,2022-01-07
-1,02,2022-01-05,2022-01-10
-2,03,2022-01-06,2022-01-11
-3,04,2022-01-07,2022-01-12
-4,05,2022-01-10,2022-01-13
+ID,DATE,NEW_DATE
+01,2022-01-04,2022-01-07
+02,2022-01-05,2022-01-10
+03,2022-01-06,2022-01-11
+04,2022-01-07,2022-01-12
+05,2022-01-10,2022-01-13
 """
