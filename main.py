@@ -38,15 +38,19 @@ business_holidays_2022_datetime = [datetime.strptime(date, '%Y-%m-%d') for date 
 
 # weekday() indexes: Monday = 0, Tuesday = 1, Wednesday = 2, Thursday = 3, Friday = 4, Saturday = 5, Sunday = 6
 def calculate_new_date(old_date):
-    """Calculates the new date using the old date as an input. New date is expected to be three business days after 
-    old date."""
+    """Calculates the new date using old date as an input. New date is expected to be a number of
+    business days after old date (number is set using the 'biz_days_delay' variable."""
+    biz_days_delay = 3  # number of business days between old date and new date
     new_date = old_date  # dates start out as matching
     biz_days_elapsed = 0  # number of business days that have elapsed since old date
-    while biz_days_elapsed != 3:  # for every business day that passes, biz_days_elapsed will increase until it is 3
+    # for every business day that passes, biz_days_elapsed will increase until it reaches biz_days_delay
+    while biz_days_elapsed != biz_days_delay:
         if new_date.weekday() >= 5 or new_date in business_holidays_2022_datetime:  # new date is not a business day
             new_date += timedelta(days=1)
         else:  # new date is a business day
-            if biz_days_elapsed == 2 and new_date.weekday() == 4:  # ensures Wed old date has new date on Mon
+            # this catches a case where the last time the while loop runs the weekday is on Friday,
+            # causing the new date to be on Saturday.
+            if biz_days_elapsed == (biz_days_delay - 1) and new_date.weekday() == 4:
                 new_date += timedelta(days=3)
             else:
                 new_date += timedelta(days=1)
